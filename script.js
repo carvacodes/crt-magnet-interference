@@ -20,11 +20,12 @@ window.onresize = function(){
 };
 
 document.addEventListener('mousemove', moveMagnet);
-document.addEventListener('touchmove', moveMagnet);
+document.addEventListener('touchmove', moveMagnet, {passive: false});
 document.addEventListener('mousedown', toggleMagnetLock);
 
 function moveMagnet(e) {
   if (e.changedTouches) {
+    e.preventDefault();
     e = e.touches[0];
   }
 

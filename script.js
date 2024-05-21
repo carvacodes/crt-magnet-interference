@@ -83,6 +83,8 @@ function moveHandler(e) {
     handleInputChange(event);
   } else {
     updateControlPoints(event);
+    e.preventDefault();
+    e.stopPropagation();
   }
 }
 
@@ -140,13 +142,19 @@ function updateFixedControlPoints(e) {
   for (let i = 1; i < 5; i++) {
     let p = cpMap.get(i.toString());
     // check if a control point is near the click destination, and remove it if so
-    if (Math.abs(p.x - e.clientX) <= 8 && Math.abs(p.y - e.clientY) <= 8 && p.fixed) {
+    if (Math.abs(p.x - e.clientX) <= 20 && Math.abs(p.y - e.clientY) <= 20 && p.fixed) {
       console.log(`resetting anchor ${i}`);
       p.fixed = false;
       p.x = e.clientX;
       p.y = e.clientY;
       return;   // return immediately from here; no need to check other points in this case
-    } else if (p.fixed) {
+    }
+  }
+  
+  for (let i = 1; i < 5; i++) {
+    let p = cpMap.get(i.toString());
+    
+    if (p.fixed) {
       // the current point is already fixed; continue to the next
       continue;
     } else {
@@ -157,6 +165,8 @@ function updateFixedControlPoints(e) {
       return;
     }
   }
+
+    
   // at the end of the array and the user clicked off all points; reset them
   cpLat1.fixed = false;
   cpLat2.fixed = false;

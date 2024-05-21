@@ -3,8 +3,26 @@
     <head>
         <link rel="stylesheet" href="./style.css">
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap" rel="stylesheet">
     </head>
     <body>
+        <div class="settings-drawer collapsed" id="settingsDrawer">
+            <div class="settings-children">
+                <div class="settings-header">
+                    <p>Settings</p>
+                    <p class="hide-on-expand">&#8226;&#8226;&#8226;</p>
+                    <p class="hide-on-collapse">&#10006;</p>
+                </div>
+                <div class="settings-body hide-on-collapse">
+                    <div class="settings-group">
+                        <p>Grid Size</p>
+                        <input type="range" id="gridSizeInput" step="1" min="10" max="500" value="25" />
+                    </div>
+                </div>
+            </div>
+        </div>
         <canvas id="canvas"></canvas>
         <script src="./script.js"></script>
     </body>

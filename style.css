@@ -1,5 +1,81 @@
+*, button, input {
+  font-family: 'Quicksand', sans-serif;
+  user-select: none;
+}
+
 body {
-    margin: 0;
-    overflow: hidden;
-    background-color: #000;
+  margin: 0;
+  overflow: hidden;
+  background-color: #000;
+  display: flex;
+}
+.settings-drawer {
+  width: 100vw;
+  position: fixed;
+  top: 0;
+  left: 0;
+  color: white;
+  text-align: center;
+  background-color: rgba(0,0,0,0.6);
+}
+
+.settings-children {
+  max-width: 400px;
+  display: block;
+  margin: 0 auto;
+}
+
+.settings-children div {
+  max-width: 400px;
+}
+
+.settings-drawer.collapsed .hide-on-collapse {
+  display: none;
+}
+
+.settings-drawer.expanded .hide-on-collapse {
+  display: block;
+}
+
+.settings-drawer.collapsed .hide-on-expand {
+  display: block;
+}
+
+.settings-drawer.expanded .hide-on-expand {
+  display: none;
+}
+
+.settings-header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  height: 2.2rem;
+  cursor: pointer;
+}
+
+.settings-header p, .settings-group p {
+  margin: 0 5px;
+}
+
+.settings-group {
+  width: 100%;
+  height: 2.2rem;
+  display: flex;
+  flex-direction: row;
+  border-top: thin solid black;
+  justify-content: space-between;
+  align-items: center;
+}
+
+@media screen and (min-width: 600px) {
+  .settings-children {
+    max-width: 400px;
+    display: block;
+    margin: 0 auto;
   }
+}
+
+button {
+  margin: 0 auto;
+}

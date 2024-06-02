@@ -4,21 +4,22 @@
 /*                               */
 /*********************************/
 
-let r = Math.floor(255 * Math.random()), // variables used to set random colors for gradients
-    g = Math.floor(255 * Math.random()), // variables used to set random colors for gradients
-    b = Math.floor(255 * Math.random()), // variables used to set random colors for gradients
-    gridSize = 25,                       // the spacing of lines
-    motionBlur = 1,                      // the speed with which the canvas clears every frame
-    additionalAnimationCallbacks = 1 / motionBlur;    // allows for requestAnimationFrame to be run exactly until the screen is fully cleared
+let r = Math.floor(255 * Math.random()),     // variables used to set random colors for gradients
+    g = Math.floor(255 * Math.random()),     // variables used to set random colors for gradients
+    b = Math.floor(255 * Math.random()),     // variables used to set random colors for gradients
+    gridSize = 25 * window.devicePixelRatio; // the spacing of lines, scaled up to match the device DPI
 
 let canvas = document.getElementById('canvas');
 let ctx = canvas.getContext('2d');
 
-canvas.width = innerWidth;
-canvas.height = innerHeight;
+let _w = innerWidth * devicePixelRatio;
+let _h = innerHeight * devicePixelRatio;
+
+canvas.width = _w;
+canvas.height = _h;
 
 // set up the initial canvas gradient
-let gridGrad = ctx.createLinearGradient(0, 0, innerWidth, innerHeight); 
+let gridGrad = ctx.createLinearGradient(0, 0, _w, _h); 
 
 gridGrad.addColorStop(0, 'rgb(' + r + ',255,255)');
 gridGrad.addColorStop(0.33, 'rgb(255,' + g + ',255)');
@@ -26,10 +27,10 @@ gridGrad.addColorStop(0.66, 'rgb(255,255,' + b + ')');
 gridGrad.addColorStop(1, 'rgb(' + r + ',' + g + ',' + b + ')');
 
 // control points
-let cpLat1 = {fixed: false, x: innerWidth / 2, y: innerHeight / 2};
-let cpLat2 = {fixed: false, x: innerWidth / 2, y: innerHeight / 2};
-let cpLon1 = {fixed: false, x: innerWidth / 2, y: innerHeight / 2};
-let cpLon2 = {fixed: false, x: innerWidth / 2, y: innerHeight / 2};
+let cpLat1 = {fixed: false, x: _w / 2, y: _h / 2};
+let cpLat2 = {fixed: false, x: _w / 2, y: _h / 2};
+let cpLon1 = {fixed: false, x: _w / 2, y: _h / 2};
+let cpLon2 = {fixed: false, x: _w / 2, y: _h / 2};
 
 // this control point map makes for easier updating and point indicator drawing later
 let cpMap = new Map();
@@ -40,6 +41,16 @@ cpMap.set('4', cpLon2);
 
 // DOM elements
 let gridSizeInput = document.getElementById('gridSizeInput');
+// set the min and max of this input to be scaled to the device DPI
+let defaultGridSizeMin = gridSizeInput.getAttribute('min');
+let defaultGridSizeMax = gridSizeInput.getAttribute('max');
+let defaultGridStepSize = gridSizeInput.getAttribute('step');
+let defaultGridValue = gridSizeInput.getAttribute('value');
+
+gridSizeInput.setAttribute('min', defaultGridSizeMin * window.devicePixelRatio);
+gridSizeInput.setAttribute('max', defaultGridSizeMax * window.devicePixelRatio);
+gridSizeInput.setAttribute('step', defaultGridStepSize * window.devicePixelRatio);
+gridSizeInput.setAttribute('value', defaultGridValue * window.devicePixelRatio);
 
 /*********************************/
 /*                               */
@@ -48,14 +59,16 @@ let gridSizeInput = document.getElementById('gridSizeInput');
 /*********************************/
 
 window.onresize = function(){
-  canvas.width = innerWidth;
-	canvas.height = innerHeight;
+  _w = innerWidth * devicePixelRatio;
+  _h = innerHeight * devicePixelRatio;
+  
+  canvas.width = _w;
+  canvas.height = _h;
 };
 
 document.addEventListener('mousemove', moveHandler);
 document.addEventListener('touchmove', moveHandler, {passive: false});
 document.addEventListener('click', clickHandler);
-document.addEventListener('click', clickHandler, {passive: false});
 
 /********************************/
 /*                              */
@@ -81,6 +94,8 @@ function moveHandler(e) {
   let event = getEvent(e);
   if (e.target.tagName == 'INPUT') {
     handleInputChange(event);
+  } else if (e.target.tagName == 'P' || e.target.tagName == 'DIV') {
+    return;
   } else {
     updateControlPoints(event);
     e.preventDefault();
@@ -102,8 +117,11 @@ function handleInputChange(e) {
 }
 
 function clickHandler(e) {
+  console.log('fired vlick')
   let event = getEvent(e);
   if (event.target.tagName != 'CANVAS') {
+    e.stopPropagation();
+    e.preventDefault();
     handleMenuInteraction(e);
     return;
   }
@@ -122,7 +140,7 @@ function clickHandler(e) {
 // as on the tin: handles the user clicking the menu bar
 function handleMenuInteraction(e) {
   let target = e.target;
-  if (e.target.classList.contains('settings-header') || e.target.parentElement.classList.contains('settings-header')) {
+  if (target.classList.contains('settings-header') || target.parentElement.classList.contains('settings-header')) {
     toggleMenu();
   }
 }
@@ -139,14 +157,17 @@ function toggleMenu() {
 }
 
 function updateFixedControlPoints(e) {
+  let userX = e.clientX * window.devicePixelRatio;
+  let userY = e.clientY * window.devicePixelRatio;
+
   for (let i = 1; i < 5; i++) {
     let p = cpMap.get(i.toString());
     // check if a control point is near the click destination, and remove it if so
-    if (Math.abs(p.x - e.clientX) <= 20 && Math.abs(p.y - e.clientY) <= 20 && p.fixed) {
+    if (Math.abs(p.x - userX) <= 20 && Math.abs(p.y - userY) <= 20 && p.fixed) {
       console.log(`resetting anchor ${i}`);
       p.fixed = false;
-      p.x = e.clientX;
-      p.y = e.clientY;
+      p.x = userX;
+      p.y = userY;
       return;   // return immediately from here; no need to check other points in this case
     }
   }
@@ -158,10 +179,10 @@ function updateFixedControlPoints(e) {
       // the current point is already fixed; continue to the next
       continue;
     } else {
-      console.log(`setting anchor at ${e.clientX}, ${e.clientY}`);
+      console.log(`setting anchor at ${userX}, ${userY}`);
       p.fixed = true;
-      p.x = e.clientX;
-      p.y = e.clientY;
+      p.x = userX;
+      p.y = userY;
       return;
     }
   }
@@ -176,21 +197,24 @@ function updateFixedControlPoints(e) {
 }
 
 function updateControlPoints(e) {
-  // move only the control points that are not fixed
-  cpLat1.x = cpLat1.fixed ? cpLat1.x : e.clientX;
-  cpLat1.y = cpLat1.fixed ? cpLat1.y : e.clientY;
-  cpLat2.x = cpLat2.fixed ? cpLat2.x : e.clientX;
-  cpLat2.y = cpLat2.fixed ? cpLat2.y : e.clientY;
+  let userX = e.clientX * window.devicePixelRatio;
+  let userY = e.clientY *window.devicePixelRatio;
 
-  cpLon1.x = cpLon1.fixed ? cpLon1.x : e.clientX;
-  cpLon1.y = cpLon1.fixed ? cpLon1.y : e.clientY;
-  cpLon2.x = cpLon2.fixed ? cpLon2.x : e.clientX;
-  cpLon2.y = cpLon2.fixed ? cpLon2.y : e.clientY;
+  // move only the control points that are not fixed
+  cpLat1.x = cpLat1.fixed ? cpLat1.x : userX;
+  cpLat1.y = cpLat1.fixed ? cpLat1.y : userY;
+  cpLat2.x = cpLat2.fixed ? cpLat2.x : userX;
+  cpLat2.y = cpLat2.fixed ? cpLat2.y : userY;
+
+  cpLon1.x = cpLon1.fixed ? cpLon1.x : userX;
+  cpLon1.y = cpLon1.fixed ? cpLon1.y : userY;
+  cpLon2.x = cpLon2.fixed ? cpLon2.x : userX;
+  cpLon2.y = cpLon2.fixed ? cpLon2.y : userY;
 }
 
 // creates a new gradient
 function refreshColors() {
-  let newGrad = ctx.createLinearGradient(0, 0, innerWidth, innerHeight);
+  let newGrad = ctx.createLinearGradient(0, 0, _w, _h);
 
   r = Math.floor(255 * Math.random());
   g = Math.floor(255 * Math.random());
@@ -206,39 +230,47 @@ function refreshColors() {
 
 // draws numbered circles at each bezier anchor point
 function drawBezierAnchorPoints() {
-  ctx.font = "12px sans-serif";
+  ctx.font = `${12 * window.devicePixelRatio}px sans-serif`;
   cpMap.forEach((p, k) => {
     ctx.fillStyle = 'rgb(255,255,255)';
     ctx.beginPath();
     if (!p.fixed) { return; }
-    ctx.arc(p.x, p.y, 8, 0, Math.PI * 2);
+    ctx.arc(p.x, p.y, 8 * window.devicePixelRatio, 0, Math.PI * 2);
     ctx.fill();
     ctx.fillStyle = 'rgb(0, 0, 0)';
-    ctx.fillText(k, p.x - 4, p.y + 4);
+    ctx.fillText(k, p.x - 4 * window.devicePixelRatio, p.y + 4 * window.devicePixelRatio);
   });
 }
+
+
+/*********************************/
+/*                               */
+/*           Animation           */
+/*                               */
+/*********************************/
 
 function draw(){
   window.requestAnimationFrame(draw);
 
-  ctx.clearRect(0,0,innerWidth,innerHeight);
+  ctx.clearRect(0,0,_w,_h);
 
   // load up the current gradient
   ctx.strokeStyle = gridGrad;
+  ctx.lineWidth = window.devicePixelRatio;
 
   // draw longitudinal (horizontal) curves
   ctx.beginPath();
-  for (let i = 0 - innerWidth * 3; i < innerWidth * 4; i += gridSize) {
+  for (let i = 0 - _w * 3; i < _w * 4; i += gridSize) {
     ctx.moveTo(i,0);
-    ctx.bezierCurveTo(cpLat1.x, cpLat1.y, cpLat2.x, cpLat2.y, i, innerHeight);
+    ctx.bezierCurveTo(cpLat1.x, cpLat1.y, cpLat2.x, cpLat2.y, i, _h);
   }
   ctx.stroke();
 
   // draw latitudinal (vertical) curves
   ctx.beginPath();
-  for (let j = 0 - innerHeight * 3; j < innerHeight * 4; j += gridSize) {
+  for (let j = 0 - _h * 3; j < _h * 4; j += gridSize) {
     ctx.moveTo(0,j);
-    ctx.bezierCurveTo(cpLon1.x, cpLon1.y, cpLon2.x, cpLon2.y, innerWidth, j);
+    ctx.bezierCurveTo(cpLon1.x, cpLon1.y, cpLon2.x, cpLon2.y, _w, j);
   }
   ctx.stroke();
 

@@ -9,6 +9,12 @@ body {
   background-color: #000;
   display: flex;
 }
+
+canvas {
+  height: 100%;
+  width: 100vw;
+}
+
 .settings-drawer {
   width: 100vw;
   position: fixed;
